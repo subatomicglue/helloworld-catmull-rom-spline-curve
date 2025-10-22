@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Catmull-Rom Curve Tracker</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+class CatmullRom {
+  // Compute Catmull-Rom spline between four points (p0,p1,p2,p3)
+  // Returns interpolated point at parameter t ∈ [0,1]
+  static interpolate(p0, p1, p2, p3, t) {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const x = 0.5 * ((2 * p1.x) +
+      (-p0.x + p2.x) * t +
+      (2*p0.x - 5*p1.x + 4*p2.x - p3.x) * t2 +
+      (-p0.x + 3*p1.x - 3*p2.x + p3.x) * t3);
+    const y = 0.5 * ((2 * p1.y) +
+      (-p0.y + p2.y) * t +
+      (2*p0.y - 5*p1.y + 4*p2.y - p3.y) * t2 +
+      (-p0.y + 3*p1.y - 3*p2.y + p3.y) * t3);
+    return { x, y };
+  }
+
+  // Given an array of points, compute subdivided Catmull-Rom points
+  static computeCurve(points, subdivisions = 10) {
+  if (points.length < 2) return points.slice();
+
+  // If fewer than 4 points, fall back to linear interpolation
+  if (points.length < 4) {
+    const curve = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      for (let j = 0; j <= subdivisions; j++) {
+        const t = j / subdivisions;
+        curve.push({
+          x: points[i].x * (1 - t) + points[i+1].x * t,
+          y: points[i].y * (1 - t) + points[i+1].y * t
+        });
+      }
+    }
+    return curve;
+  }
+
+  // Pad endpoints by projecting outward
+  const pts = points.slice();
+  const first = pts[0], second = pts[1];
+  const last = pts[pts.length - 1], penultimate = pts[pts.length - 2];
+
+  const pre = { x: first.x + (first.x - second.x), y: first.y + (first.y - second.y) };
+  const post = { x: last.x + (last.x - penultimate.x), y: last.y + (last.y - penultimate.y) };
+
+  pts.unshift(pre);
+  pts.push(post);
+
+  const curve = [];
+  for (let i = 0; i < pts.length - 3; i++) {
+    for (let j = 0; j <= subdivisions; j++) {
+      const t = j / subdivisions;
+      curve.push(this.interpolate(pts[i], pts[i+1], pts[i+2], pts[i+3], t));
+    }
+  }
+  return curve;
+}
+}
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+const history = [];
+const maxHistory = 10;
+
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+
+function addPoint(x, y) {
+  history.push({x, y});
+  if (history.length > maxHistory) history.shift();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, width, height);
+
+  // Draw history points in red
+  ctx.fillStyle = 'red';
+  for (const p of history) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Only draw curve if enough points
+  if (history.length >= 4) {
+    const curvePoints = CatmullRom.computeCurve(history, 10);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < curvePoints.length; i++) {
+      const p = curvePoints[i];
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+move_freq=0
+
+// Mouse and touch tracking
+function handleMove(e) {
+  let x, y;
+  if (e.touches && e.touches.length) {
+    x = e.touches[0].clientX;
+    y = e.touches[0].clientY;
+  } else {
+    x = e.clientX;
+    y = e.clientY;
+  }
+  move_freq = (move_freq + 1) % 10
+  if (move_freq == 0)
+    addPoint(x, y);
+}
+
+canvas.addEventListener('mousemove', handleMove);
+canvas.addEventListener('touchmove', handleMove, {passive: true});
+
+draw();
+</script>
+</body>
+</html>
