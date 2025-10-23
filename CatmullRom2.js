@@ -1,7 +1,3 @@
-
-// TODO: rewrite this to use {x, y} points like CatmullRom.js (or vice versa)
-
-
 // Catmull Rom Spline from arbitrary list of points (Uniform, Centripetal, Chordal)
 // https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
 //
@@ -9,6 +5,8 @@
 // numOfSegments  how many subdivisions in between each point
 // alpha          0==uniform (std catmull rom), 0.5==centripetal, 1.0==chordal
 // returns        flat float array of interpolated points
+//
+// IMPORTANT: See getCurvePointsOpt for optimal version. :)
 //
 // FAQ:
 // - It may produce loops or overshoot if points are far apart or unevenly spaced, which is exactly what centripetal parameterization is designed to avoid.
