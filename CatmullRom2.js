@@ -154,16 +154,13 @@ function getCurvePointsOpt(points, numOfSegments = 16, alpha = 0.5) {
       // Interpolate once per stage using precomputed denominators
       const A1x = (t1_t * p0.x + t_t0 * p1.x) * inv_t10;
       const A1y = (t1_t * p0.y + t_t0 * p1.y) * inv_t10;
-
       const A2x = (t2_t * p1.x + t_t1 * p2.x) * inv_t21;
       const A2y = (t2_t * p1.y + t_t1 * p2.y) * inv_t21;
-
       const A3x = (t3_t * p2.x + t_t2 * p3.x) * inv_t32;
       const A3y = (t3_t * p2.y + t_t2 * p3.y) * inv_t32;
 
       const B1x = (t2_t * A1x + t_t0 * A2x) * inv_t20;
       const B1y = (t2_t * A1y + t_t0 * A2y) * inv_t20;
-
       const B2x = (t3_t * A2x + t_t1 * A3x) * inv_t31;
       const B2y = (t3_t * A2y + t_t1 * A3y) * inv_t31;
 
