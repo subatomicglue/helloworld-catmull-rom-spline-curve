@@ -61,8 +61,8 @@ function draw() {
     let same = history[history.length - 1].x == latest_mouse_pos.x &&
                history[history.length - 1].y == latest_mouse_pos.y
     // if so, use history as is, else append latest_mouse_pos for smoother drawing
-    let h =  same ? history : [...history, latest_mouse_pos]
-    const curvePoints = CatmullRom.computeCurve(h, 10);
+    let history_plus_mouse =  same ? history : [...history, latest_mouse_pos]
+    const curvePoints = CatmullRom.computeCurve(history_plus_mouse, 10);
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = 2;
     ctx.beginPath();

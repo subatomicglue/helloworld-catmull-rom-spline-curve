@@ -99,10 +99,99 @@ function getCurvePoints(ptsa, numOfSegments, alpha=0.5 /*centripetal*/) {
   return _pts;
 };
 
+
+// optimized version of the above...
+// (much much less redundant math, reduce divides by precomputing reciprocals)
+function getCurvePointsOpt(points, numOfSegments = 16, alpha = 0.5) {
+  if (points.length < 2) return points.slice();
+
+  // Mirror endpoints
+  const first = points[0], second = points[1];
+  const last = points[points.length - 1], secondLast = points[points.length - 2];
+
+  const pts = [
+    { x: 2 * first.x - second.x, y: 2 * first.y - second.y },
+    ...points,
+    { x: 2 * last.x - secondLast.x, y: 2 * last.y - secondLast.y }
+  ];
+
+  const result = [];
+
+  const getT = (t, p0, p1) => {
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+    return Math.pow(Math.sqrt(dx * dx + dy * dy), alpha) + t;
+  };
+
+  for (let i = 0; i < pts.length - 3; i++) {
+    const p0 = pts[i];
+    const p1 = pts[i + 1];
+    const p2 = pts[i + 2];
+    const p3 = pts[i + 3];
+
+    const t0 = 0.0;
+    const t1 = getT(t0, p0, p1);
+    const t2 = getT(t1, p1, p2);
+    const t3 = getT(t2, p2, p3);
+
+    const dt = (t2 - t1) / numOfSegments;
+
+    // Precompute denominators and their inverses
+    const inv_t10 = 1 / (t1 - t0);
+    const inv_t21 = 1 / (t2 - t1);
+    const inv_t32 = 1 / (t3 - t2);
+    const inv_t20 = 1 / (t2 - t0);
+    const inv_t31 = 1 / (t3 - t1);
+
+    for (let t = t1; t <= t2 + 1e-9; t += dt) {
+      const t_t0 = t - t0;
+      const t_t1 = t - t1;
+      const t_t2 = t - t2;
+      const t1_t = t1 - t;
+      const t2_t = t2 - t;
+      const t3_t = t3 - t;
+
+      // Interpolate once per stage using precomputed denominators
+      const A1x = (t1_t * p0.x + t_t0 * p1.x) * inv_t10;
+      const A1y = (t1_t * p0.y + t_t0 * p1.y) * inv_t10;
+
+      const A2x = (t2_t * p1.x + t_t1 * p2.x) * inv_t21;
+      const A2y = (t2_t * p1.y + t_t1 * p2.y) * inv_t21;
+
+      const A3x = (t3_t * p2.x + t_t2 * p3.x) * inv_t32;
+      const A3y = (t3_t * p2.y + t_t2 * p3.y) * inv_t32;
+
+      const B1x = (t2_t * A1x + t_t0 * A2x) * inv_t20;
+      const B1y = (t2_t * A1y + t_t0 * A2y) * inv_t20;
+
+      const B2x = (t3_t * A2x + t_t1 * A3x) * inv_t31;
+      const B2y = (t3_t * A2y + t_t1 * A3y) * inv_t31;
+
+      const Cx = (t2_t * B1x + t_t1 * B2x) * inv_t21;
+      const Cy = (t2_t * B1y + t_t1 * B2y) * inv_t21;
+
+      result.push({ x: Cx, y: Cy });
+    }
+  }
+
+  result.push({ ...points[points.length - 1] });
+  return result;
+}
+
+
+
+
 // CatmullRom class wrapper
 class CatmullRom {
-  // Given an array of points, compute subdivided Catmull-Rom points
-  static computeCurve(points, subdivisions = 10, alpha=0.5 /*centripetal*/ ) {
+  // DEFAULT: Given an array of points, compute subdivided Catmull-Rom points
+  static computeCurve(points, subdivisions = 10, alpha=0 /* uniform (std catmull rom) */ ) {
+    return this.computeCurveOpt(points, subdivisions, alpha);
+  }
+
+
+
+  // UNOPTIMIZED: Given an array of points, compute subdivided Catmull-Rom points
+  static computeCurveUnopt(points, subdivisions = 10, alpha=0.5 /*centripetal*/ ) {
     // map the {x,y} points array to a flat array [x0,y0, x1,y1, ...]
     points = points.map( r => [r.x, r.y] ).flat();
 
@@ -114,5 +203,10 @@ class CatmullRom {
       retval[i] = { x: retval[i], y: retval[i+1] };
     }
     return retval;
+  }
+
+  // OPTIMIZED: Given an array of points, compute subdivided Catmull-Rom points
+  static computeCurveOpt(points, subdivisions = 10, alpha=0.5 /*centripetal*/ ) {
+    return getCurvePointsOpt(points, subdivisions, alpha);
   }
 }
