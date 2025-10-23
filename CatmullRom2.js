@@ -11,6 +11,7 @@
 // returns        flat float array of interpolated points
 //
 // FAQ:
+// - It may produce loops or overshoot if points are far apart or unevenly spaced, which is exactly what centripetal parameterization is designed to avoid.
 // - Hermite curve: defined by two endpoints and tangents at those endpoints.
 // - Catmull-Rom spline: a type of Hermite curve, but the tangents are automatically computed from the neighboring points.
 //   This makes Catmull-Rom splines easier to use when you have a series of points and want a smooth curve through them.
@@ -182,7 +183,7 @@ function getCurvePointsOpt(points, numOfSegments = 16, alpha = 0.5) {
 // CatmullRom class wrapper
 class CatmullRom {
   // DEFAULT: Given an array of points, compute subdivided Catmull-Rom points
-  static computeCurve(points, subdivisions = 10, alpha=0 /* uniform (std catmull rom) */ ) {
+  static computeCurve(points, subdivisions = 10, alpha=0.5 /*centripetal*/ ) {
     return this.computeCurveOpt(points, subdivisions, alpha);
   }
 
