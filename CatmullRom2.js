@@ -65,8 +65,8 @@ function getCurvePoints(ptsa, numOfSegments, alpha=0.5 /*centripetal*/) {
     let t2 = GetT(t1, p1, p2);
     let t3 = GetT(t2, p2, p3);
 
-    let t;
-    for (t = t1; t <= t2; t += ((t2-t1) / numOfSegments))
+    // 1e-9: make sure floating-point imprecision doesn’t skip the last step
+    for (let t = t1; t <= (t2 + 1e-9); t += ((t2-t1) / numOfSegments))
     {
       let A1x = ((t1-t)/(t1-t0)) * p0[0] + ((t-t0)/(t1-t0)) * p1[0];
       let A1y = (t1-t)/(t1-t0) * p0[1] + (t-t0)/(t1-t0) * p1[1];
@@ -143,7 +143,8 @@ function getCurvePointsOpt(points, numOfSegments = 16, alpha = 0.5) {
     const inv_t20 = 1 / (t2 - t0);
     const inv_t31 = 1 / (t3 - t1);
 
-    for (let t = t1; t <= t2 + 1e-9; t += dt) {
+    // 1e-9: make sure floating-point imprecision doesn’t skip the last step
+    for (let t = t1; t <= (t2 + 1e-9); t += dt) {
       const t_t0 = t - t0;
       const t_t1 = t - t1;
       const t_t2 = t - t2;
