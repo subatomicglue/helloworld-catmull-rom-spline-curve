@@ -4,6 +4,8 @@ Simply move your mouse (or finger) on the screen.
 - Create a *coarse* set of **points** (in red)
 - Create a *detailed* set of **smoothed lines** (in blue)
 
+[Try it Out](https://htmlpreview.github.io/?https://raw.githubusercontent.com/subatomicglue/helloworld-catmull-rom-spline-curve/master/index.html)
+
 ## What's in the code
 
 See [CatmullRom.js](CatmullRom.js) for simple version
