@@ -105,13 +105,15 @@ function getCurvePointsOpt(points, numOfSegments = 16, alpha = 0.5) {
   if (points.length < 2) return points.slice();
 
   // Mirror endpoints
-  const first = points[0], second = points[1];
-  const last = points[points.length - 1], secondLast = points[points.length - 2];
+  const first = points[0];
+  const second = points[1];
+  const secondToLast = points[points.length - 2];
+  const last = points[points.length - 1];
 
   const pts = [
-    { x: 2 * first.x - second.x, y: 2 * first.y - second.y },
+    { x: 2 * first.x - second.x, y: 2 * first.y - second.y }, // mirror 2nd pt
     ...points,
-    { x: 2 * last.x - secondLast.x, y: 2 * last.y - secondLast.y }
+    { x: 2 * last.x - secondToLast.x, y: 2 * last.y - secondToLast.y } // mirror 2nd to last pt
   ];
 
   const result = [];
@@ -171,7 +173,7 @@ function getCurvePointsOpt(points, numOfSegments = 16, alpha = 0.5) {
     }
   }
 
-  result.push({ ...points[points.length - 1] });
+  result.push({ ...pts[pts.length - 2] }); // add in the last point, same as points[points.length - 1]
   return result;
 }
 
